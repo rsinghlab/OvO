@@ -1,0 +1,1 @@
+{"method": "grid", "metric": {"name": "val_loss", "goal": "minimize"}, "parameters": {"optimizer": {"values": ["adamW"]}, "learning_rate": {"values": [0.001, 0.0001, 0.0005, 1e-05, 5e-05, 1e-06, 5e-06, 1e-07, 5e-07, 1e-08, 5e-08]}, "random_seed": {"values": [42]}, "batch_size": {"values": [16, 32, 64]}, "epochs": {"values": [200]}, "num_heads": {"values": [1, 2, 4, 8, 16]}}}
