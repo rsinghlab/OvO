@@ -34,7 +34,7 @@ def train_model(model_name, dataloaders, criterion, len_train, len_val, modality
     Trains a multimodal deep learning model using the given data loaders, criterion, and optimizer, and wandb config. Logs metrics to wandb (weights and biases) for hyperparameter tuning.
 
     Args:
-        model_name (str): The name of the multimodal model to be trained (e.g., concat, OvO, pairwise).
+        model_name (str): The name of the multimodal model to be trained (e.g., concat, OvO, pairwise, early).
         dataloaders (Dict[str, list of DataLoaders]): A dictionary containing a list of PyTorch DataLoader objects for the 'train' and 'val' sets.
         criterion (Callable): The loss function to optimize during training.
         len_train (int): length of the train set.
@@ -159,7 +159,7 @@ def main():
     Trains a mulitmodal PyTorch model with Weights and Biases (wandb) and hyperparameter tuning for five TCGA modalities.
 
     Arguments:
-        model_name (str): The name of the model architecture to use (concat, OvO, or pairwise).
+        model_name (str): The name of the model architecture to use (concat, OvO, pairwise, or early).
         data_path (str): The path to the directory containing the training and validation data.
         save_model_path (str): The path to the directory where the trained model will be saved.
         config_path (str): The path to the directory containing the configuration file for the hyperparameter search.

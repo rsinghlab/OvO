@@ -10,8 +10,8 @@ The datasets used in this paper are from TCGA's LUAD, KIRC, LIHC, STAD, and COAD
 ![Image](docs/images/download_data_1.png)
 3. On the left-hand menu, under the cases tab, make sure to select a specific disease for the study if multiple are present. Under the files tab, under data type, select "Slide Image," "Gene Level Copy Number," "Methylation Beta Value," and "Gene Expression Quantification." These correspond to the imaging, CNV, DNA methylation (epigenetic), and gene expression (transcriptomic) modalities respectively. Note that for this paper, we further filtered for patients that were alive to create a more balanced combined dataset (navigate to Cases -> Vital Status). 
 <p text-align="center">
-  <img src="docs/images/download_data_2.png" width="200" height="600"/>
-  <img src="docs/images/download_data_3.png" width="300" height="450" /> 
+  <img src="docs/images/download_data_2.png" width="200" height="450"/>
+  <img src="docs/images/download_data_3.png" width="100" height="450" /> 
 </p>
 
 4. Next, click on the small shopping cart icon and add all files to cart. Click the cart icon in the top right corner. 
@@ -40,7 +40,7 @@ Unimodal:
 To train and tune for a single modality model, use `modeling/training_one_hyper.py`. This allows you to train a neural network for any one of the tabular modalities and a CNN for the imaging modality, and do hyperparameter tuning using weights and biases (example config can be found in `common_files/config.json`). 
 
 Multi-modal:
-To train on all five modalities, use `modeling/training_five_hyper.py` which will do hyperparameter tuning using weights and biases (example config can be found in `common_files/config.json`). You can train using a concatenation model, a pairwise cross-modal attention model, and our OvO model. 
+To train on all five modalities, use `modeling/training_five_hyper.py` which will do hyperparameter tuning using weights and biases (example config can be found in `common_files/config.json`). You can train using a concatenation model, a pairwise cross-modal attention model, an early fusion with self-attention model, and our OvO model. 
 
 ### 5. Evaluation
 

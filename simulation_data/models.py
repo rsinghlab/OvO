@@ -3,12 +3,11 @@ import sys
 sys.path.append('../..')
 import torch                    
 import torch.nn as nn
-import torch.nn.functional as F
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from itertools import combinations
 
-from common_files.models import OvOAttention, MultiHeadAttention
+from common_files.models import MultiHeadAttention
 
 
 class concat(nn.Module):
@@ -17,14 +16,9 @@ class concat(nn.Module):
         super().__init__()
         self.num_mod = num_mod
         
-        
         #input layers
         self.fc1 = nn.Linear(20, 256)
         self.fc2 = nn.Linear(256, 256)
-        
-        
-        ##MLP
-        #self.fc2b = nn.Linear(256, 256)
         self.relu = nn.ReLU()
         
         #out
@@ -55,9 +49,6 @@ class pairwise(nn.Module):
         #input layers
         self.fc1 = nn.Linear(20, 256)
         self.fc2 = nn.Linear(256, 256)
-        
-        ##MLP
-        #self.fc2b = nn.Linear(256, 256)
         self.relu = nn.ReLU()
         
         #attention
@@ -104,6 +95,40 @@ class pairwise(nn.Module):
         out = self.out_pairwise(comb)
         return out
     
+
+class early(nn.Module):
+
+    def __init__(self, num_mod, num_heads):
+        super().__init__()
+        self.num_mod = num_mod
+        self.num_heads = num_heads
+        
+        #input layers
+        self.fc1 = nn.Linear(20, 256)
+        self.fc2 = nn.Linear(256, 256)
+        self.relu = nn.ReLU()
+        
+        #attention
+        self.early_attention  = nn.MultiheadAttention(256*self.num_mod, self.num_heads, batch_first = True)
+        
+        #out
+        self.out_early = nn.Linear(256*self.num_mod, 2)
+
+    def forward(self, x):
+        #x is a list of inputs
+        outputs = []
+        for i in range(self.num_mod):
+            t = x[i]
+            t = self.fc1(t.to(torch.float32))
+            t = self.fc2(t)
+            t = self.relu(t)
+            outputs.append(t)
+            
+        comb = torch.cat(outputs, dim=1)
+        att, weights = self.early_attention(comb, comb, comb) 
+        out = self.out_early(att)
+        return out
+         
 class OvO(nn.Module):
 
     def __init__(self, num_mod, num_heads):

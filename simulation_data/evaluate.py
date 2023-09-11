@@ -1,13 +1,11 @@
 import sys
 sys.path.append('../..')
-import glob
 import pandas as pd
 import numpy as np
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 from common_file.model_utils import MyLoader
-from models import OvO, pairwise, concat
+from models import OvO, pairwise, concat, early
 
 def eval(model, test_loader):
     """
@@ -63,7 +61,7 @@ def main():
     """
     Runs multi-modal models on simulation test data, computes evaluation metrics, and saves results to a CSV file.
     Command-line arguments:
-    - model_name (str): the name of the model to use (concat, OvO, or pairwise)
+    - model_name (str): the name of the model to use (concat, OvO, early, or pairwise)
     - lr (str): the learning rate to use for the model
     - epochs (str): the number of epochs to train the model 
     - heads (int): the number of attention heads to use in the model
@@ -87,9 +85,10 @@ def main():
             model = concat(i)
         elif model_name == "pairwise":
             model = pairwise(i,heads)
+        elif model_name == "early":
+            model = early(i,heads)
         else:
-            model = OvO(i,heads)
-        #flops = calc_flops(best_model, i)            
+            model = OvO(i,heads)            
         acc = 0
         acc_list = []
         preds = []

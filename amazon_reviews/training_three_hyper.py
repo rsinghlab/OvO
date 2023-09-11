@@ -31,7 +31,7 @@ def train_model(model_name, dataloaders, criterion, len_train, len_val, config, 
     Trains a multimodal deep learning model using the given data loaders, criterion, and optimizer, and wandb config. Logs metrics to wandb (weights and biases) for hyperparameter tuning.
 
     Args:
-        model_name (str): The name of the multimodal model to be trained (e.g., resnet_bert_mlp, resnet_bert__mlp_OvO, resnet_bert_mlp_pairwise ).
+        model_name (str): The name of the multimodal model to be trained (e.g., resnet_bert_mlp, resnet_bert__mlp_OvO, resnet_bert_mlp_pairwise, resnet_bert_mlp_early).
         dataloaders (Dict[str, list of DataLoaders]): A dictionary containing a list of PyTorch DataLoader objects for the 'train' and 'val' sets.
         criterion (Callable): The loss function to optimize during training.
         len_train (int): length of the train set.

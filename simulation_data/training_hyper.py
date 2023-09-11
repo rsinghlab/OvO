@@ -2,14 +2,13 @@ import sys
 sys.path.append('../..')
 import pandas as pd
 import torch
-import numpy as np
 import time
 import json
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from common_files.model_utils import MyLoader, set_seed
-from models import OvO, pairwise, concat
+from models import OvO, pairwise, concat, early
 import wandb
 
 
@@ -18,7 +17,7 @@ def train_model(model_name, dataloaders, criterion, len_train, len_val,num_modal
     Trains a multimodal deep learning model using the given data loaders, criterion, and optimizer, and wandb config. Logs metrics to wandb (weights and biases) for hyperparameter tuning.
 
     Args:
-        model_name (str): The name of the multimodal model to be trained (e.g., concat, OvO, pairwise ).
+        model_name (str): The name of the multimodal model to be trained (e.g., concat, OvO, pairwise, early).
         dataloaders (Dict[str, list of DataLoaders]): A dictionary containing a list of PyTorch DataLoader objects for the 'train' and 'val' sets.
         criterion (Callable): The loss function to optimize during training.
         len_train (int): length of the train set.
@@ -37,6 +36,8 @@ def train_model(model_name, dataloaders, criterion, len_train, len_val,num_modal
         model = concat(num_modalities)
     elif model_name == "pairwise":
         model = pairwise(num_modalities, config.num_heads)
+    elif model_name == "early":
+        model = early(num_modalities, config.num_heads)
     else:
         model = OvO(num_modalities, config.num_heads)
     

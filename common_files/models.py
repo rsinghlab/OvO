@@ -142,6 +142,7 @@ class MultimodalFramework(nn.Module):
         
         #attention schemes
         self.pairwise_attention  = nn.MultiheadAttention(256, self.num_heads, batch_first = True)
+        self.early_attention  = nn.MultiheadAttention(self.num_mod * 256, self.num_heads, batch_first = True)
         self.OvO_multihead_attention = MultiHeadAttention(256,self.num_heads)
 
         
@@ -172,8 +173,10 @@ class MultimodalFramework(nn.Module):
                 - `"bert_resnet"`: Concatenation of ResNet18 and Bert models
                 - `"bert_resnet_OvO"`: ResNet18 and Bert models with OvO attention
                 - `"bert_resnet_pairwise"`: ResNet18 and Bert models with pairwise cross-modal attention
+                - `"bert_resnet_early"`: ResNet18 and Bert models with early-fusion to self-attention
                 - `"bert_resnet_mlp"`: Concatenation of ResNet18, Bert, and MLP
                 - `"bert_resnet_mlp_pairwise"`: ResNet18, Bert, MLP, and pairwise cross-modal attention
+                - `"bert_resnet_mlp_early"`: ResNet18, Bert, MLP, with early-fusion to self-attention
                 - `"bert_resnet_mlp_OvO"`: ResNet18, Bert, MLP, with OvO attention
                 
                 
@@ -235,7 +238,19 @@ class MultimodalFramework(nn.Module):
             combined = torch.cat((attn_output_LV,
                                   attn_output_VL), dim=1)
             out = self.multimodal_classification(combined)
-            
+
+        elif model == "bert_resnet_early":   
+            img, text, masks = x
+            res_emb = self.resnet18(img)
+        
+            bert_emb = self.bert(text,attention_mask=masks).last_hidden_state[:,0,:] 
+            res = self.res_wrap(res_emb)
+            bert = self.bert_wrap(bert_emb)
+            combined = torch.cat((bert, res), dim=1)
+
+            attn_output, attn_output_weights = self.early_attention(combined, combined, combined)
+            out = self.multimodal_classification(attn_output)
+   
         elif model == "bert_resnet_mlp":
             features, img, text, masks = x
             
@@ -273,7 +288,23 @@ class MultimodalFramework(nn.Module):
 
             comb = torch.cat(results, dim=1)
             out = self.pairwise_classification(comb)
+
+        elif model == "bert_resnet_mlp_early":   
+            features, img, text, masks = x
             
+            feat = self.fc1(features)
+            feat = self.relu(feat)
+            feat = self.fc2(feat)
+            
+            bert = self.bert(text,attention_mask=masks).last_hidden_state[:,0,:]
+            bert = self.bert_wrap(bert)
+            
+            res = self.resnet18(img)
+            res = self.res_wrap(res)
+            combined = torch.cat((bert, feat, res), dim=1)
+
+            attn_output, attn_output_weights = self.early_attention(combined, combined, combined)
+            out = self.multimodal_classification(attn_output)    
         else:
             features, img, text, masks = x
             

@@ -60,6 +60,7 @@ class MultimodalFramework(nn.Module):
         
         #attention
         self.pairwise_attention  = nn.MultiheadAttention(256, self.num_heads, batch_first = True)
+        self.early_attention  = nn.MultiheadAttention(256*self.num_mod, self.num_heads, batch_first = True)
         self.OvO_attention = MultiHeadAttention(256,self.num_heads) 
         
         #out
@@ -73,7 +74,6 @@ class MultimodalFramework(nn.Module):
         # All possible pairs in list
         a = list(range(len(l)))
         pairs = list(combinations(a, r=2))
-        #pairs = torch.combinations(torch.tensor(l), 2)
         combos = []
         for pair in pairs:
             #(0,1)
@@ -94,7 +94,7 @@ class MultimodalFramework(nn.Module):
         Args:
             - inp: A list of inputs that contains four tensors representing textual features (t1, t2, t3, t4) and one tensor
             representing an image tensor (x).
-            - model: A string indicating the type of model to use for the forward pass. It can be "concat", "pairwise", or "OvO".
+            - model: A string indicating the type of model to use for the forward pass. It can be "concat", "pairwise", "early", or "OvO".
 
         """
         t1, t2, t3, t4,  x = inp 
@@ -148,6 +148,11 @@ class MultimodalFramework(nn.Module):
             combined = self.bi_directional_att(outputs)
             comb = torch.cat(combined, dim=1)
             out = self.out_pairwise(comb)
+        
+        elif model == "early":
+            combined = torch.cat(outputs, dim=1)
+            comb = self.early_attention(combined, combined, combined)
+            out = self.out_concat(comb)
         
         else:
             attns = []

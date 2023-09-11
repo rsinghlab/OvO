@@ -17,7 +17,7 @@ def main():
     """
     Runs the multimodal framework on test data, computes evaluation metrics, and saves results to a CSV file.
     Command-line arguments:
-    - model_name (str): the name of the model to use (e.g. concat, pairwise, or OvO)
+    - model_name (str): the name of the model to use (e.g. concat, pairwise, early, or OvO)
     - lr (str): the learning rate to use for the model
     - epochs (str): the number of epochs to train the model for
     - batch_size (int): the batch size to use for testing
