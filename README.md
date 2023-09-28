@@ -1,6 +1,6 @@
 # One-Versus-Others Multimodal Attention
 
-This repository is the official implementation of [One-Versus-Others Multi-modal Attention](https://arxiv.org/abs/2307.05435). 
+This repository is the official implementation of [One-Versus-Others Attention: Scalable Multimodal Integration](https://arxiv.org/abs/2307.05435). 
 
 
 ## Description
