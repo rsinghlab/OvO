@@ -5,7 +5,7 @@ This repository is the official implementation of [One-Versus-Others Multi-modal
 ## Description
 We present a multi-modal attention method that is domain-agnostic and does not rely on modality alignment or pairwise calculations, called as one-versus-others (OvO) attention. OvO offers a novel approach that takes outputs from one modality encoder and computes the dot product against a weight matrix and the average of the weights from all other modalities encoders (hence the name, one versus others); this is repeated for each modality. Our approach reduces the computational complexity significantly, growing linearly with respect to number of modalities, unlike early fusion and cross-modal architectures, which grow quadratically. The figure below demonstrates our model:
 
-<img width="3000" alt="overview" src="https://github.com/rsinghlab/OvO/assets/35315239/e40f7d5a-d068-46ad-9b09-c37584735930">
+<img src="https://github.com/rsinghlab/OvO/assets/35315239/e40f7d5a-d068-46ad-9b09-c37584735930">
 
 
 ## Requirements
