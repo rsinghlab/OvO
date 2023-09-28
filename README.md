@@ -1,10 +1,7 @@
-# One-Versus-Others Multimodal Attention
-
-This repository is the official implementation of [One-Versus-Others Attention: Scalable Multimodal Integration](https://arxiv.org/abs/2307.05435). 
-
+# One-Versus-Others Attention: Scalable Multimodal Integration
 
 ## Description
-We present a multi-modal attention method that is domain-agnostic and does not rely on modality alignment or pairwise calculations, called as one-versus-others (OvO) attention. OvO offers a novel approach that takes outputs from one modality encoder and computes the dot product against a weight matrix and the average of the weights from all other modalities encoders (hence the name, one versus others); this is repeated for each modality. Our approach reduces the computational complexity significantly, growing linearly with respect to number of modalities, unlike early fusion and cross-modal architectures, which grow quadratically. The figure below demonstrates our model:
+We present a multi-modal attention method that is domain-agnostic and does not rely on modality alignment or pairwise calculations, called one-versus-others (OvO) attention. OvO offers a novel approach that takes outputs from one modality encoder and computes the dot product against a weight matrix and the average of the weights from all other modalities encoders (hence the name, one versus others); this is repeated for each modality. Our approach reduces the computational complexity significantly, growing linearly with respect to number of modalities, unlike early fusion and cross-modal architectures, which grow quadratically. The figure below demonstrates our model:
 
 <img src="model_overview.png" width=2000>
 
@@ -31,7 +28,7 @@ An example config file is provided in `common_files/config.json`, which includes
 
 ## Evaluation
 
-The evaluation scripts follow a pattern `evaluate_NUMBER-OF-MODALITIES.py`. For example, to evaluate a three modality model using OvO attention on the Amazon dataset, you would run the following command:
+The evaluation scripts follow the pattern `evaluate_NUMBER-OF-MODALITIES.py`. For example, to evaluate a three modality model using OvO attention on the Amazon dataset, you would run the following command:
 
 ```train
 python3 amazon_reviews/evaluate_three.py bert_resnet_mlp_OvO learning_rate epochs batch_size number_of_attention_heads random_seed_list /path/to/test_data
