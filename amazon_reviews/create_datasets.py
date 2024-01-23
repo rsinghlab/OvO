@@ -6,7 +6,7 @@ import glob
 from torchvision import transforms
 from torch.utils.data import TensorDataset
 from common_files.model_utils import tokenize_mask
-from common_files.custom_sets import AmazonImgDataset,AmazonTabDataset
+from common_files.custom_sets import AmazonImgDataset, AmazonTabDataset
 
 
 def create_img_embeddings(split, df, path):

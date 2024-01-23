@@ -79,5 +79,90 @@ def build_optimizer(network, optimizer, learning_rate):
                                lr=learning_rate, eps = 1e-8)
     return optimizer
 
+class OvOAttention(nn.Module):
+    """
+    Module that implements One-vs-Others attention mechanism as proposed by the paper.
+    """
+    def __init__(self):
+        super(OvOAttention, self).__init__()
+    
+    def forward(self, others, main, W):
+        """
+        Compute context vector and attention weights using One-vs-Others attention.
+
+        Args:
+            others (List[torch.Tensor]): List of tensors of shape (batch_size, num_heads, seq_len, embed_dim) representing
+                                          the other modality inputs.
+            main (torch.Tensor): A tensor of shape (batch_size, num_heads, seq_len, embed_dim) representing the main modality input.
+            W (torch.nn.Parameter): A learnable parameter tensor of shape (d_head, d_head) representing the weight matrix.
+
+        Returns:
+            torch.Tensor: A tensor of shape (batch_size, embed_dim) representing the context vector.
+            torch.Tensor: A tensor of shape (batch_size, num_heads, seq_len) representing the attention weights.
+        
+        """
+        mean = sum(others) / len(others)
+        score = mean.squeeze(2) @ W @ main.squeeze(2).transpose(1, 2) 
+        attn = F.softmax(score, -1)
+        context = torch.bmm(attn, main.squeeze(2))
+        return context, attn
+    
+class MultiHeadAttention(nn.Module):
+    """
+    Module that implements Multi-Head attention mechanism. This was adapted and modified from https://github.com/sooftware/attentions. 
+
+    Args:
+        d_model (int): Dimensionality of the input embedding.
+        num_heads (int): Number of attention heads.
+
+    Returns:
+        torch.Tensor: A tensor of shape (batch_size, seq_len, embed_dim) representing the context vector.
+    """
+    
+    def __init__(self, d_model: int = 512, num_heads: int = 8):
+        super(MultiHeadAttention, self).__init__()
+
+        assert d_model % num_heads == 0, "d_model % num_heads should be zero."
+
+        self.d_head = int(d_model / num_heads)
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.ovo_attn = OvOAttention()
+        self.query_proj = nn.Linear(d_model, self.d_head * num_heads)
+        self.key_proj = nn.Linear(d_model, self.d_head * num_heads)
+        self.value_proj = nn.Linear(d_model, self.d_head * num_heads)
+        self.W = torch.nn.Parameter(torch.FloatTensor(self.d_head, self.d_head).uniform_(-0.1, 0.1))
+
+    def forward(self, other, main):
+        """
+        Compute context vector using Multi-Head attention.
+
+        Args:
+            others (List[torch.Tensor]): List of tensors of shape (batch_size, num_heads, seq_len, embed_dim) representing
+                                          the other modality inputs.
+            main (torch.Tensor): A tensor of shape (batch_size, num_heads, seq_len, embed_dim) representing the main modality input.
+
+        Returns:
+            torch.Tensor: A tensor of shape (batch_size, seq_len, embed_dim) representing the context vector.
+
+        """
+        batch_size = main.size(0)
+        main = main.unsqueeze(1)
+        bsz, tgt_len, embed_dim = main.shape
+        src_len, _, _ = main.shape
+        
+        main = main.contiguous().view(tgt_len, bsz * self.num_heads, self.d_head).transpose(0, 1)
+        main = main.view(bsz, self.num_heads, tgt_len, self.d_head)
+        others = []
+        for mod in other:
+            mod = mod.unsqueeze(1)
+            mod = mod.contiguous().view(tgt_len, bsz * self.num_heads, self.d_head).transpose(0, 1)
+            mod = mod.view(bsz, self.num_heads, tgt_len, self.d_head)
+            others.append(mod)  
+        context, attn = self.ovo_attn(others, main, self.W)
+        context = context.contiguous().view(bsz * tgt_len, embed_dim)
+        context = context.view(bsz, tgt_len,  context.size(1))
+        
+        return context
 
 

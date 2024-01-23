@@ -14,7 +14,7 @@ import logging
 logging.propagate = False 
 logging.getLogger().setLevel(logging.ERROR)
 import wandb
-from common_files.models import MultimodalFramework
+from common_files.memes_amazon.models import MultimodalFramework
 from common_files.model_utils import set_seed, build_optimizer
 from common_files.custom_sets import MyLoader
 print("PyTorch Version: ",torch.__version__)

@@ -7,94 +7,7 @@ from transformers import BertModel
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-
-
-class OvOAttention(nn.Module):
-    """
-    Module that implements One-vs-Others attention mechanism as proposed by the paper.
-    """
-    def __init__(self):
-        super(OvOAttention, self).__init__()
-    
-    def forward(self, others, main, W):
-        """
-        Compute context vector and attention weights using One-vs-Others attention.
-
-        Args:
-            others (List[torch.Tensor]): List of tensors of shape (batch_size, num_heads, seq_len, embed_dim) representing
-                                          the other modality inputs.
-            main (torch.Tensor): A tensor of shape (batch_size, num_heads, seq_len, embed_dim) representing the main modality input.
-            W (torch.nn.Parameter): A learnable parameter tensor of shape (d_head, d_head) representing the weight matrix.
-
-        Returns:
-            torch.Tensor: A tensor of shape (batch_size, embed_dim) representing the context vector.
-            torch.Tensor: A tensor of shape (batch_size, num_heads, seq_len) representing the attention weights.
-        
-        """
-        mean = sum(others) / len(others)
-        score = mean.squeeze(2) @ W @ main.squeeze(2).transpose(1, 2) 
-        attn = F.softmax(score, -1)
-        context = torch.bmm(attn, main.squeeze(2))
-        return context, attn
-    
-class MultiHeadAttention(nn.Module):
-    """
-    Module that implements Multi-Head attention mechanism. This was adapted and modified from https://github.com/sooftware/attentions. 
-
-    Args:
-        d_model (int): Dimensionality of the input embedding.
-        num_heads (int): Number of attention heads.
-
-    Returns:
-        torch.Tensor: A tensor of shape (batch_size, seq_len, embed_dim) representing the context vector.
-    """
-    
-    def __init__(self, d_model: int = 512, num_heads: int = 8):
-        super(MultiHeadAttention, self).__init__()
-
-        assert d_model % num_heads == 0, "d_model % num_heads should be zero."
-
-        self.d_head = int(d_model / num_heads)
-        self.d_model = d_model
-        self.num_heads = num_heads
-        self.ovo_attn = OvOAttention()
-        self.query_proj = nn.Linear(d_model, self.d_head * num_heads)
-        self.key_proj = nn.Linear(d_model, self.d_head * num_heads)
-        self.value_proj = nn.Linear(d_model, self.d_head * num_heads)
-        self.W = torch.nn.Parameter(torch.FloatTensor(self.d_head, self.d_head).uniform_(-0.1, 0.1))
-
-    def forward(self, other, main):
-        """
-        Compute context vector using Multi-Head attention.
-
-        Args:
-            others (List[torch.Tensor]): List of tensors of shape (batch_size, num_heads, seq_len, embed_dim) representing
-                                          the other modality inputs.
-            main (torch.Tensor): A tensor of shape (batch_size, num_heads, seq_len, embed_dim) representing the main modality input.
-
-        Returns:
-            torch.Tensor: A tensor of shape (batch_size, seq_len, embed_dim) representing the context vector.
-
-        """
-        batch_size = main.size(0)
-        main = main.unsqueeze(1)
-        bsz, tgt_len, embed_dim = main.shape
-        src_len, _, _ = main.shape
-        
-        main = main.contiguous().view(tgt_len, bsz * self.num_heads, self.d_head).transpose(0, 1)
-        main = main.view(bsz, self.num_heads, tgt_len, self.d_head)
-        others = []
-        for mod in other:
-            mod = mod.unsqueeze(1)
-            mod = mod.contiguous().view(tgt_len, bsz * self.num_heads, self.d_head).transpose(0, 1)
-            mod = mod.view(bsz, self.num_heads, tgt_len, self.d_head)
-            others.append(mod)  
-        context, attn = self.ovo_attn(others, main, self.W)
-        context = context.contiguous().view(bsz * tgt_len, embed_dim)
-        context = context.view(bsz, tgt_len,  context.size(1))
-        
-        return context
+from model_utils import OvOAttention, MultiHeadAttention
     
 class MultimodalFramework(nn.Module):
     """
@@ -142,7 +55,7 @@ class MultimodalFramework(nn.Module):
         
         #attention schemes
         self.pairwise_attention  = nn.MultiheadAttention(256, self.num_heads, batch_first = True)
-        self.early_attention  = nn.MultiheadAttention(self.num_mod * 256, self.num_heads, batch_first = True)
+        self.self_attention  = nn.MultiheadAttention(self.num_mod * 256, self.num_heads, batch_first = True)
         self.OvO_multihead_attention = MultiHeadAttention(256,self.num_heads)
 
         
@@ -172,11 +85,11 @@ class MultimodalFramework(nn.Module):
                 - `"bert"`: Bert model
                 - `"bert_resnet"`: Concatenation of ResNet18 and Bert models
                 - `"bert_resnet_OvO"`: ResNet18 and Bert models with OvO attention
-                - `"bert_resnet_pairwise"`: ResNet18 and Bert models with pairwise cross-modal attention
-                - `"bert_resnet_early"`: ResNet18 and Bert models with early-fusion to self-attention
+                - `"bert_resnet_cross"`: ResNet18 and Bert models with pairwise cross-modal attention
+                - `"bert_resnet_self"`: ResNet18 and Bert models with early-fusion to self-attention
                 - `"bert_resnet_mlp"`: Concatenation of ResNet18, Bert, and MLP
-                - `"bert_resnet_mlp_pairwise"`: ResNet18, Bert, MLP, and pairwise cross-modal attention
-                - `"bert_resnet_mlp_early"`: ResNet18, Bert, MLP, with early-fusion to self-attention
+                - `"bert_resnet_mlp_cross"`: ResNet18, Bert, MLP, and pairwise cross-modal attention
+                - `"bert_resnet_mlp_self"`: ResNet18, Bert, MLP, with early-fusion to self-attention
                 - `"bert_resnet_mlp_OvO"`: ResNet18, Bert, MLP, with OvO attention
                 
                 
@@ -224,7 +137,7 @@ class MultimodalFramework(nn.Module):
                                   attn_output_VL.squeeze(1)), dim=1)
             out = self.multimodal_classification(combined)
         
-        elif model == "bert_resnet_pairwise": 
+        elif model == "bert_resnet_cross": 
             img, text, masks = x
             res_emb = self.resnet18(img)
         
@@ -239,7 +152,7 @@ class MultimodalFramework(nn.Module):
                                   attn_output_VL), dim=1)
             out = self.multimodal_classification(combined)
 
-        elif model == "bert_resnet_early":   
+        elif model == "bert_resnet_self":   
             img, text, masks = x
             res_emb = self.resnet18(img)
         
@@ -248,7 +161,7 @@ class MultimodalFramework(nn.Module):
             bert = self.bert_wrap(bert_emb)
             combined = torch.cat((bert, res), dim=1)
 
-            attn_output, attn_output_weights = self.early_attention(combined, combined, combined)
+            attn_output, attn_output_weights = self.self_attention(combined, combined, combined)
             out = self.multimodal_classification(attn_output)
    
         elif model == "bert_resnet_mlp":
@@ -266,7 +179,7 @@ class MultimodalFramework(nn.Module):
             combined = torch.cat((bert, feat, res), dim=1)
             out = self.multimodal_classification(combined)
         
-        elif model == "bert_resnet_mlp_pairwise":
+        elif model == "bert_resnet_mlp_cross":
             features, img, text, masks = x
             
             feat = self.fc1(features)
@@ -289,7 +202,7 @@ class MultimodalFramework(nn.Module):
             comb = torch.cat(results, dim=1)
             out = self.pairwise_classification(comb)
 
-        elif model == "bert_resnet_mlp_early":   
+        elif model == "bert_resnet_mlp_self":   
             features, img, text, masks = x
             
             feat = self.fc1(features)
@@ -303,7 +216,7 @@ class MultimodalFramework(nn.Module):
             res = self.res_wrap(res)
             combined = torch.cat((bert, feat, res), dim=1)
 
-            attn_output, attn_output_weights = self.early_attention(combined, combined, combined)
+            attn_output, attn_output_weights = self.self_attention(combined, combined, combined)
             out = self.multimodal_classification(attn_output)    
         else:
             features, img, text, masks = x

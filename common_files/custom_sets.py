@@ -6,6 +6,65 @@ import os
 from PIL import ImageFile,Image
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+class tadpoleDataset(torch.utils.data.Dataset):
+    def __init__(self, dataframe, labels, transform=None):
+        """
+        Args:
+            dataframe (pd.DataFrame): A Pandas DataFrame containing the data.
+            labels (pd.DataFrame): A Pandas DataFrame containing the labels.
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """
+        self.dataframe = dataframe
+        self.labels = labels
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.dataframe)
+
+    def __getitem__(self, idx):
+        '''
+        Returns a tuple (sample, label)
+        '''
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+
+        sample = torch.tensor(self.dataframe.iloc[idx], dtype=torch.float)
+        label = torch.tensor(self.labels.iloc[idx], dtype=torch.float)
+
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample, label
+    
+class eICUDataset(Dataset):
+    def __init__(self, file_path):
+        #target_mapping={"Expired": 0, "Alive": 1}
+        # Load the data
+        df = pd.read_csv(file_path)
+
+        # Map target variable to int
+        #df['target'] = df['target'].map(target_mapping)
+        self.labels = df['target']
+        
+        columns_to_drop = ['Unnamed: 0', 'patientunitstayid', 'uniquepid', 'target']
+        columns_to_drop = [col for col in columns_to_drop if col in df.columns]
+
+        # Drop the specified columns
+        self.data = df.drop(columns=columns_to_drop, errors='ignore')
+
+        # Convert to tensors
+        self.data = torch.tensor(self.data.values, dtype=torch.float32)
+        self.labels = torch.tensor(self.labels.values, dtype=torch.long)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx], self.labels[idx]
+
+    def save(self, file_path):
+        torch.save(self, file_path)
+
 class MemesDataset(Dataset):
     #used to create imaging tensors for the Hateful memes data
 
@@ -79,7 +138,6 @@ class AmazonTabDataset(Dataset):
             idx = idx.tolist()
        
         return [self.X.iloc[idx].values, self.y.iloc[idx]]   
-
 
 
 class TCGA_TabDataset(Dataset):
@@ -165,16 +223,13 @@ class MyIter(object):
         # terminates, this iterator will terminates.
         # The `StopIteration` raised inside that shortest loader's `__next__`
         # method will in turn gets out of this `__next__` method.
-        batches = [loader_iter.next() for loader_iter in self.loader_iters]
+        batches = [next(loader_iter) for loader_iter in self.loader_iters]
         return self.my_loader.combine_batch(batches)
 
-        # Python 2 compatibility
-        next = __next__
 
     def __len__(self):
         return len(self.my_loader)
-
-
+    
 class MyLoader(object):
     """This class wraps several pytorch DataLoader objects, allowing each time 
     taking a batch from each of them and then combining these several batches 
@@ -195,4 +250,5 @@ class MyLoader(object):
     # Customize the behavior of combining batches here.
     def combine_batch(self, batches):
         return batches
+
 

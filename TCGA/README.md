@@ -37,18 +37,18 @@ After the notebooks are run, we found the intersection of patients who had all f
 ### 4. Training and hyperparameter tuning.
 
 Unimodal:
-To train and tune for a single modality model, use `modeling/training_one_hyper.py`. This allows you to train a neural network for any one of the tabular modalities and a CNN for the imaging modality, and do hyperparameter tuning using weights and biases (example config can be found in `common_files/config.json`). 
+To train and tune for a single modality model, use `modeling/training_unimodal_hyper.py`. This allows you to train a neural network for any one of the tabular modalities and a CNN for the imaging modality, and do hyperparameter tuning using weights and biases (example config can be found in `common_files/config.json`). 
 
 Multi-modal:
-To train on all five modalities, use `modeling/training_five_hyper.py` which will do hyperparameter tuning using weights and biases (example config can be found in `common_files/config.json`). You can train using a concatenation model, a pairwise cross-modal attention model, an early fusion with self-attention model, and our OvO model. 
+To train on all five modalities, use `modeling/training_multimodal_hyper.py` which will do hyperparameter tuning using weights and biases (example config can be found in `common_files/config.json`). You can train using a concatenation model, a pairwise cross-modal attention model, an early fusion with self-attention model, and our OvO model. 
 
 ### 5. Evaluation
 
 Unimodal:
-To evaluate for a single modality model, use `modeling/evaluate_one.py`. This allows you to a neural network for any one of the tabular modalities and a CNN for the imaging modality, using the best hyperparameters found in the training step. 
+To evaluate for a single modality model, use `modeling/evaluate.py` with the `multimodal` flag set to False. This allows you to evaluate the best neural network for any one of the tabular modalities and a CNN for the imaging modality, using the best hyperparameters found in the training step. 
 
 Multi-modal:
-To evaluate on all five modalities, use `modeling/evaluate_five.py`. This allows you to evaluate using the best hyperparameters found in the training step. 
+To evaluate on all five modalities, use `modeling/evaluate.py` with the `multimodal` flag set to True. This allows you to evaluate using the best hyperparameters found in the training step. 
 
 
 ### Information about modalities

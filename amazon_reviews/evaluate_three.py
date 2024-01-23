@@ -6,7 +6,7 @@ import torch
 import torchvision
 from sklearn.metrics import confusion_matrix, classification_report
 from torch.utils.data import DataLoader
-from common_files.models import MultimodalFramework
+from common_files.memes_amazon.models import MultimodalFramework
 from common_files.custom_sets import MyLoader
 print("PyTorch Version: ",torch.__version__)
 print("Torchvision Version: ",torchvision.__version__)
