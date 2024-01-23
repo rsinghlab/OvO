@@ -5,12 +5,15 @@ This repository is the official implementation of [One-Versus-Others Multi-modal
 ## Description
 We present One-Versus-Others (OvO), a new scalable multimodal attention mechanism. The proposed formulation significantly reduces the computational complexity compared to the widely used early fusion through self-attention and cross-attention methods as it scales linearly with number of modalities and not quadratically. OvO outperformed self-attention, cross-attention, and concatenation on four diverse medical datasets, including four-modality, five-modality, and two six-modality datasets. The figure below demonstrated our model:
 
-<img src="" width="300">
+<img src="model_overview.png" width="800">
 
 ## Requirements
 Python 3.9.0
+
 PyTorch Version: 1.13.0+cu117
+
 Torchvision Version: 0.14.0+cu117
+
 To install requirements:
 
 ```setup
