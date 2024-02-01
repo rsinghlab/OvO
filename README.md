@@ -1,7 +1,5 @@
 # One-Versus-Others Multimodal Attention
 
-This repository is the official implementation of [One-Versus-Others Multi-modal Attention](https://arxiv.org/abs/2030.12345). 
-
 ## Description
 We present One-Versus-Others (OvO), a new scalable multimodal attention mechanism. The proposed formulation significantly reduces the computational complexity compared to the widely used early fusion through self-attention and cross-attention methods as it scales linearly with number of modalities and not quadratically. OvO outperformed self-attention, cross-attention, and concatenation on four diverse medical datasets, including four-modality, five-modality, and two six-modality datasets. The figure below demonstrated our model:
 
@@ -40,8 +38,3 @@ The evaluation scripts follow a pattern `evaluate.py` with a `multimodal` flag s
 python3 tadpole/evaluate.py True OvO learning_rate epochs batch_size random_seed_list /path/to/test_data number_of_attention_heads
 ```
 An example config file is provided in `common_files/config.json`, which includes the full grid we used to find the best hyperparameters. More details about exactly how to evaluate each dataset are located in the `README.md` files inside each dataset folder, as they differ slightly across datasets.
-
-
-## Contributing Github Authors
-[Michal Golovanevsky](https://github.com/michalg04), [Akira Nair](https://github.com/akira-nair), [Eva Schiller](https://github.com/eschill04)
-
